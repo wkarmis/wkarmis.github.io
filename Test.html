@@ -1,0 +1,1681 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will Karmis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at 50% 50%, #fefefe 0%, #f8f8f8 100%);
+            color: #333;
+            line-height: 1.6;
+            font-size: 16px;
+            cursor: crosshair;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .aura-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .core {
+            position: relative;
+            max-width: 200px;
+            padding: 40px;
+            text-align: center;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            backdrop-filter: blur(10px);
+            transition: all 1s ease;
+            animation: breathe 8s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .name {
+            font-size: 20px;
+            font-weight: 300;
+            margin-bottom: 20px;
+            letter-spacing: 0.1em;
+            opacity: 0.9;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+            letter-spacing: 0.05em;
+            text-transform: lowercase;
+        }
+
+        .aura-layer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .aura-layer.active {
+            opacity: 1;
+        }
+
+        .layer-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(200, 220, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        .layer-2 {
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(255, 200, 220, 0.08) 0%, transparent 70%);
+            animation: rotate 45s linear infinite reverse;
+        }
+
+        .layer-3 {
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle, rgba(220, 255, 200, 0.06) 0%, transparent 70%);
+            animation: rotate 60s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .energy-point {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: rgba(100, 100, 100, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            animation: pulse 3s infinite ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid transparent;
+        }
+
+        .energy-point:hover {
+            background: rgba(50, 50, 50, 0.8);
+            transform: scale(2);
+            box-shadow: 0 0 20px rgba(50, 50, 50, 0.3);
+        }
+
+        .energy-point.playing {
+            background: rgba(80, 120, 255, 0.6);
+            border-color: rgba(80, 120, 255, 0.8);
+            animation: playingPulse 1.5s infinite ease-in-out;
+            box-shadow: 0 0 15px rgba(80, 120, 255, 0.4);
+        }
+
+        .energy-point.loading {
+            background: rgba(255, 200, 80, 0.6);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 0.3; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes playingPulse {
+            0%, 100% { 
+                opacity: 0.8; 
+                transform: scale(1.1);
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.3);
+            }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .play-icon {
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .energy-point:hover .play-icon,
+        .energy-point.playing .play-icon {
+            opacity: 1;
+        }
+
+        .audio-info {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #666;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 40;
+        }
+
+        .audio-info.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .track-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .track-status {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .ethereal-hint {
+            position: absolute;
+            font-size: 12px;
+            color: rgba(150, 150, 150, 0.6);
+            pointer-events: none;
+            animation: float 6s infinite ease-in-out;
+            z-index: 5;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.4; }
+            50% { transform: translateY(-10px) rotate(2deg); opacity: 0.8; }
+        }
+
+        .return-core {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 13px;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 30;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-color: transparent;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .return-core.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .return-core:hover {
+            color: #333;
+            text-decoration-color: #333;
+        }
+
+        .content-field {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), 
+                        rgba(255, 255, 255, 0.95) 0%, 
+                        rgba(255, 255, 255, 0.8) 50%, 
+                        rgba(248, 248, 248, 0.9) 100%);
+            overflow-y: auto;
+            z-index: 15;
+        }
+
+        .content-field.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 20;
+        }
+
+        .content-inner {
+            max-width: 600px;
+            padding: 60px 40px;
+            text-align: left;
+            animation: materialze 1s ease;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        @keyframes materialze {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.98);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .field-title {
+            font-size: 20px;
+            font-weight: 300;
+            margin-bottom: 30px;
+            color: #555;
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        .field-content p {
+            margin-bottom: 24px;
+            color: #444;
+            font-size: 15px;
+        }
+
+        .field-list {
+            margin: 30px 0;
+        }
+
+        .field-item {
+            margin-bottom: 20px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .field-item:hover {
+            padding-left: 15px;
+            color: #666;
+        }
+
+        .field-item-title {
+            font-weight: 400;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .field-item-desc {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .ambient-field {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            font-size: 13px;
+            color: #bbb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 30;
+            letter-spacing: 0.02em;
+        }
+
+        .ambient-field:hover {
+            color: #666;
+        }
+
+        .ambient-field.active {
+            color: #333;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 25px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            padding: 12px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-color: transparent;
+            padding: 0;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #333;
+            text-decoration-color: #333;
+        }
+
+        /* Energy point positioning */
+        .point-1 { top: 25%; right: 30%; animation-delay: 0s; }
+        .point-2 { bottom: 30%; left: 25%; animation-delay: 1s; }
+        .point-3 { top: 40%; left: 20%; animation-delay: 2s; }
+        .point-4 { bottom: 25%; right: 25%; animation-delay: 0.5s; }
+        .point-5 { top: 60%; right: 35%; animation-delay: 1.5s; }
+        .point-6 { top: 15%; left: 40%; animation-delay: 2.5s; }
+        .point-7 { bottom: 40%; left: 40%; animation-delay: 0.8s; }
+        .point-8 { top: 70%; left: 30%; animation-delay: 1.2s; }
+        .point-9 { bottom: 15%; right: 40%; animation-delay: 1.8s; }
+
+        .hint-1 { top: 20%; right: 15%; animation-delay: 0s; }
+        .hint-2 { bottom: 20%; left: 15%; animation-delay: 3s; }
+
+        /* Tile Profile Styles */
+        :root {
+            --tile-font: Arial, Helvetica, sans-serif;
+            --tile-font-size: 0.875rem;
+            --tile-title-font-size: 1rem;
+            --tile-text-color: #3F3F3F;
+            --tile-dark-text-color: #afafaf;
+            --tile-dark-gray: #949494;
+            --tile-medium-gray: #dfdfdf;
+            --tile-light-gray: #F5F5F5;
+        }
+
+        /* Process field specific */
+        #process-field {
+            align-items: flex-start;
+            padding-top: 60px;
+        }
+
+        #process-field .content-inner {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Tile Profile Header */
+        .tile-header {
+            display: flex;
+            flex-flow: row wrap;
+            align-items: flex-start;
+            z-index: 2;
+            padding: 8px;
+        }
+        .tile-header a#name-and-avatar {
+            display: flex;
+            flex-flow: row nowrap;
+            align-items: center;
+            margin-right: auto;
+            color: var(--tile-text-color);
+            text-decoration: none;
+        }
+        .tile-header span#tile-name {
+            margin-left: 10px;
+        }
+        .tile-header #avatar {
+            height: 1.2em;
+        }
+        .tile-header button {
+            font-size: var(--tile-font-size);
+            color: var(--tile-text-color);
+            appearance: none;
+            -webkit-appearance: none;
+            border: 0;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+        .tile-header button#end-slideshow-button {
+            display: none;
+            margin-left: 10px;
+        }
+
+        /* Tile Profile Layout */
+        .tile-main {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 0 auto;
+            margin-bottom: 70px;
+            max-width: 1200px;
+            padding: 8px;
+        }
+        .tile-main section > * {
+            margin-bottom: 20px;
+        }
+        .tile-main section h4 {
+            color: var(--tile-medium-gray);
+        }
+
+        /* Tiles */
+        .tile, .tile a {
+            color: var(--tile-text-color);
+        }
+
+        .center {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .single {
+            min-height: 300px;
+            text-decoration: none;
+        }
+
+        .list {
+            border-top: 5px solid var(--tile-medium-gray);
+        }
+        .list ul {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+        .list li {
+            display: block;
+            background-color: var(--tile-light-gray);
+            border-bottom: 1px solid var(--tile-medium-gray);
+            padding: 10px;
+        }
+        .list li a:hover {
+            text-decoration: underline;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .grid > * {
+            padding: 10px;
+            min-height: 130px;
+            color: var(--tile-text-color);
+            text-decoration: none;
+        }
+
+        .text {
+            background-color: var(--tile-light-gray);
+        }
+        .text h2.text-title, .list h2.list-title {
+            font-size: var(--tile-title-font-size);
+            margin-top: 0;
+            margin-bottom: 0;
+            padding: 10px;
+            border-bottom: 1px solid var(--tile-medium-gray);
+            background-color: var(--tile-light-gray);
+        }
+        .text .text-body {
+            height: 300px;
+            overflow: hidden;
+            overflow-y: auto;
+            padding: 0 10px;
+        }
+
+        .tile.image {
+            min-height: 300px;
+            background-size: cover;
+            background-position: center center;
+        }
+
+        .images {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            max-height: 320px;
+            overflow: hidden;
+            overflow-y: auto;
+        }
+        .images > * {
+            object-fit: cover;
+            width: 100%;
+            height: 80px;
+            cursor: zoom-in;
+        }
+
+        .embed iframe {
+            min-height: 400px;
+            height: auto !important;
+            width: 100% !important;
+        }
+
+        .audio {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            min-height: 300px;
+        }
+
+        .video, .video video {
+            width: 100%;
+        }
+
+        #slideshow, #image-viewer {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #000;
+            display: none;
+            z-index: 1000;
+        }
+        #slideshow article {
+            width: 100%;
+            max-width: 400px;
+        }
+        #image-viewer {
+            cursor: zoom-out;
+            background-position: center center;
+            background-size: contain;
+            z-index: 1001;
+        }
+
+        .tile-header.dark {
+            position: fixed;
+            width: 100%;
+        }
+        .tile-header.dark a#name-and-avatar {
+            color: var(--tile-dark-text-color);
+        }
+        .tile-header.dark a#name-and-avatar, .tile-header.dark button {
+            color: var(--tile-dark-text-color);
+        }
+
+        /* MOBILE OPTIMIZATIONS */
+        
+        /* Mobile Navigation */
+        @media (max-width: 768px) {
+            .nav-bar {
+                position: fixed;
+                bottom: 20px;
+                top: auto;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 40px);
+                max-width: 90%;
+                padding: 8px 12px;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: center;
+                border-radius: 15px;
+            }
+            
+            .nav-item {
+                font-size: 12px;
+                padding: 8px 12px;
+                background: rgba(255, 255, 255, 0.8);
+                border-radius: 8px;
+                text-decoration: none;
+                min-width: 60px;
+                text-align: center;
+            }
+            
+            .nav-item:hover,
+            .nav-item.active {
+                background: rgba(255, 255, 255, 1);
+                color: #333;
+            }
+        }
+
+        /* Mobile Core */
+        @media (max-width: 768px) {
+            .core {
+                max-width: 280px;
+                padding: 25px 20px;
+                margin: 0 20px;
+            }
+            
+            .name {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+            
+            .subtitle {
+                font-size: 13px;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Mobile Aura Layers */
+        @media (max-width: 768px) {
+            .layer-1 { width: 350px; height: 350px; }
+            .layer-2 { width: 450px; height: 450px; }
+            .layer-3 { width: 550px; height: 550px; }
+        }
+
+        /* Mobile Energy Points */
+@media (max-width: 768px) {
+    .energy-point {
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.8);
+        background: rgba(100, 100, 100, 0.4);
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+    
+    .energy-point:active {
+        transform: scale(1.5);
+        background: rgba(80, 120, 255, 0.8);
+    }
+    
+    .energy-point.playing {
+        transform: scale(1.2);
+    }
+    
+    /* Adjust positioning for mobile */
+    .point-1 { top: 20%; right: 15%; }
+    .point-2 { bottom: 25%; left: 15%; }
+    .point-3 { top: 35%; left: 10%; }
+    .point-4 { bottom: 20%; right: 20%; }
+    .point-5 { top: 55%; right: 25%; }
+    .point-6 { top: 15%; left: 30%; }
+    .point-7 { bottom: 35%; left: 25%; }
+    .point-8 { top: 65%; left: 20%; }
+    .point-9 { bottom: 15%; right: 30%; }
+}
+            
+            /* Adjust positioning for mobile */
+            .point-1 { top: 20%; right: 15%; }
+            .point-2 { bottom: 25%; left: 15%; }
+            .point-3 { top: 35%; left: 10%; }
+            .point-4 { bottom: 20%; right: 20%; }
+            .point-5 { top: 55%; right: 25%; }
+            .point-6 { top: 15%; left: 30%; }
+            .point-7 { bottom: 35%; left: 25%; }
+            .point-8 { top: 65%; left: 20%; }
+            .point-9 { bottom: 15%; right: 30%; }
+        }
+
+        /* Mobile Content Fields - FIXED OVERLAY BEHAVIOR */
+        @media (max-width: 768px) {
+            .content-field {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                overflow-y: auto;
+            }
+            
+            .content-inner {
+                max-width: 100%;
+                width: 100%;
+                padding: 80px 20px 120px 20px;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                min-height: calc(100vh - 200px);
+            }
+            
+            .field-title {
+                font-size: 18px;
+                margin-bottom: 30px;
+                text-align: center;
+                margin-top: 20px;
+            }
+            
+            .field-content {
+                flex: 1;
+            }
+            
+            .field-content p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+            
+            .field-item {
+                padding: 12px 0;
+            }
+            
+            .field-item:hover {
+                padding-left: 10px;
+            }
+            
+            .field-item-title {
+                font-size: 15px;
+            }
+            
+            .field-item-desc {
+                font-size: 13px;
+            }
+        }
+
+        /* Mobile Audio Info */
+        @media (max-width: 768px) {
+            .audio-info {
+                bottom: 100px;
+                left: 20px;
+                right: 20px;
+                width: auto;
+                transform: none;
+                padding: 10px 15px;
+                font-size: 12px;
+                text-align: center;
+            }
+        }
+
+        /* Mobile Controls */
+        @media (max-width: 768px) {
+            .return-core {
+                top: 20px;
+                left: 20px;
+                font-size: 12px;
+                background: rgba(255, 255, 255, 0.9);
+                padding: 8px 12px;
+                border-radius: 15px;
+                text-decoration: none;
+            }
+            
+            .ambient-field {
+                top: 20px;
+                right: 20px;
+                font-size: 12px;
+                background: rgba(255, 255, 255, 0.9);
+                padding: 8px 12px;
+                border-radius: 15px;
+            }
+        }
+
+        /* Mobile Tile Grid */
+        @media (max-width: 900px) {
+            .tile-main {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .tile-main {
+                padding: 15px;
+                margin-bottom: 120px;
+            }
+            
+            .tile.image {
+                min-height: 250px;
+            }
+            
+            .embed iframe {
+                min-height: 200px;
+            }
+            
+            .images {
+                grid-template-columns: repeat(3, 1fr);
+                max-height: 200px;
+            }
+            
+            .images > * {
+                height: 60px;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Mobile Process Field - FIXED */
+        @media (max-width: 768px) {
+            #process-field {
+                padding-top: 0;
+                align-items: flex-start;
+            }
+            
+            #process-field .content-inner {
+                padding: 40px 15px 120px 15px;
+                max-width: 100%;
+            }
+            
+            #process-field .field-title {
+                margin-top: 40px;
+                margin-bottom: 30px;
+            }
+        }
+
+        /* Touch-friendly hover states and interactions */
+@media (hover: none) and (pointer: coarse) {
+    .energy-point:hover {
+        transform: none;
+        background: rgba(100, 100, 100, 0.3);
+        box-shadow: none;
+    }
+    
+    .energy-point {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .field-item:hover {
+        padding-left: 0;
+        color: inherit;
+    }
+    
+    .nav-item:hover {
+        color: #666;
+        text-decoration-color: transparent;
+    }
+}
+
+        /* Mobile Typography */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            
+            .name {
+                font-size: 16px;
+            }
+            
+            .field-title {
+                font-size: 16px;
+            }
+            
+            .field-content p {
+                font-size: 13px;
+            }
+            
+            .nav-item {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+        }
+
+        /* Prevent zoom on input focus (iOS) */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Safe area for notched phones */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .return-core,
+            .ambient-field {
+                top: calc(20px + env(safe-area-inset-top));
+            }
+            
+            .nav-bar {
+                bottom: calc(20px + env(safe-area-inset-bottom));
+            }
+            
+            .audio-info {
+                bottom: calc(100px + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #111 100%);
+                color: #e0e0e0;
+            }
+            
+            .core {
+                background: rgba(40, 40, 40, 0.8);
+            }
+            
+            .name {
+                opacity: 1;
+                color: #e0e0e0;
+            }
+            
+            .subtitle {
+                color: #aaa;
+            }
+            
+            .nav-bar {
+                background: rgba(40, 40, 40, 0.9);
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .nav-item {
+                color: #aaa;
+            }
+            
+            .nav-item:hover,
+            .nav-item.active {
+                color: #e0e0e0;
+                text-decoration-color: #e0e0e0;
+            }
+            
+            .audio-info {
+                background: rgba(40, 40, 40, 0.9);
+                color: #aaa;
+            }
+            
+            .track-title {
+                color: #e0e0e0;
+            }
+            
+            @media (max-width: 768px) {
+                .nav-item {
+                    background: rgba(40, 40, 40, 0.8);
+                    color: #aaa;
+                }
+                
+                .nav-item:hover,
+                .nav-item.active {
+                    background: rgba(60, 60, 60, 1);
+                    color: #e0e0e0;
+                }
+                
+                .return-core,
+                .ambient-field {
+                    background: rgba(40, 40, 40, 0.9);
+                    color: #aaa;
+                }
+            }
+        }
+
+        /* Mobile image sizing */
+        @media (max-width: 768px) {
+            .field-content img {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="aura-container">
+        <nav class="nav-bar">
+            <button class="nav-item" onclick="openContentField('about')">about</button>
+            <button class="nav-item" onclick="openContentField('events')">events</button>
+                <button class="nav-item" onclick="openContentField('discography')">discography</button>
+           <button class="nav-item" onclick="openContentField('repository')">repository</button>
+           <button class="nav-item" onclick="openContentField('process')">process</button>
+           <button class="nav-item" onclick="openContentField('contact')">contact</button>
+       </nav>
+       
+       <div class="aura-layer layer-1"></div>
+       <div class="aura-layer layer-2"></div>
+       <div class="aura-layer layer-3"></div>
+       
+       <div class="core" id="core">
+           <div class="name">Will Karmis</div>
+           <div class="subtitle"></div>
+       </div>
+       
+       <div class="energy-point point-1" onclick="playAudioNode('track1', this)" 
+            data-field="creative process" 
+            data-track="ambient_process.mp3"
+            data-title="Creative Process">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-2" onclick="playAudioNode('track2', this)" 
+            data-field="sonic archive" 
+            data-track="ambient_archive.mp3"
+            data-title="Sonic Archive">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-3" onclick="playAudioNode('track3', this)" 
+            data-field="artistic vision" 
+            data-track="ambient_vision.mp3"
+            data-title="Artistic Vision">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-4" onclick="playAudioNode('track4', this)" 
+            data-field="collaboration" 
+            data-track="ambient_connect.mp3"
+            data-title="Collaboration">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-5" onclick="playAudioNode('track5', this)" 
+            data-field="methodology" 
+            data-track="ambient_philosophy.mp3"
+            data-title="Methodology">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-6" onclick="playAudioNode('track6', this)" 
+            data-field="repository" 
+            data-track="ambient_repository.mp3"
+            data-title="Artist Repository">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-7" onclick="playAudioNode('track7', this)" 
+            data-field="inspiration" 
+            data-track="ambient_inspiration.mp3"
+            data-title="Inspirations">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-8" onclick="playAudioNode('track8', this)" 
+            data-field="performance" 
+            data-track="ambient_performance.mp3"
+            data-title="Live Performance">
+           <div class="play-icon"></div>
+       </div>
+       <div class="energy-point point-9" onclick="playAudioNode('track9', this)" 
+            data-field="experiments" 
+            data-track="ambient_experiments.mp3"
+            data-title="Sound Experiments">
+           <div class="play-icon"></div>
+       </div>
+       
+       <div class="ethereal-hint hint-1"></div>
+       <div class="ethereal-hint hint-2"></div>
+   </div>
+
+   <!-- Content fields -->
+   <div class="content-field" id="repository-field">
+       <div class="content-inner">
+           <div class="field-title">repository</div>
+           <div class="field-content">
+               <p>A collection of ambient building blocks: pads, reel-to-reel processed piano and keyboard recordings, processed atmospheres, and textural fragments from my studio practice.</p>
+               <p>Each repository functions as a completed sketchbook—documenting a period of exploration, a particular mood, or a set of sonic ideas that reached their own conclusion. These sounds are meant to be used, edited, rearranged, and reimagined in your own work. Take what resonates, process it further, layer it into something new.</p>
+               <p>Every pack links directly to a GitHub repository where all files can be downloaded and used freely in your creative projects. Consider this a shared palette—sounds that have passed through my process, now ready for yours.</p>
+               
+               <div class="field-list">
+                   <div class="field-item">
+                       <div class="field-item-title"><a href="url">Buffering Memory</a></div>
+                       <div class="field-item-desc">Digital processing creates accidental pauses—moments when the system holds fragments of audio in temporary memory while calculating the next operation. These stems capture those suspended intervals, 
+                           the brief hesitations where sound exists in computational limbo before transformation. Beauty found in the machine's momentary uncertainty.</div>
+                   </div>
+                   <div class="field-item">
+                       <div class="field-item-title"><a href="url">Flutter Entropy</a></div>
+                       <div class="field-item-desc">I've been obsessing over the exact moment when magnetic tape begins to fail—not the dramatic wow and flutter you hear in lo-fi records, 
+                           but the microscopic speed variations that happen as oxide particles slowly detach from polyester backing. Each stem in this collection captures a different stage of that entropy, processed through increasingly degraded tape emulation until the original signal becomes something entirely new. It's archaeology of analog failure, documenting how machines forget.</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
+   
+   <div class="content-field" id="process-field">
+       <div class="content-inner">
+           <div class="field-title">process</div>
+           
+           <main class="tile-main">
+               <section>
+                   <h4></h4>
+                   <div class="tile image" style="background-image: url('https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/IMG_3681.jpg');"></div>
+                   <div class="tile image" style="background-image: url('https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/IMG_2037.jpg');"></div>
+                  
+               </section>
+
+               <section>
+                   <h4></h4>
+                   <div class="tile image" style="background-image: url('https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/IMG_2546.jpg');"></div>
+                   <div class="tile" style="height: 300px; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #000;">
+                       <iframe src="https://youtube.com/embed/sAJWch2zZtQ" 
+                               title="YouTube video player" 
+                               frameborder="0" 
+                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                               allowfullscreen
+                               style="width: 100%; height: 300px; border: none;">
+                       </iframe>
+                   </div>
+                   <div class="tile image" style="background-image: url('https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/IMG_3452.jpg');"></div>
+               </section>
+
+               <section>
+                   <h4></h4>
+                   <div class="tile image" style="background-image: url('https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/m.jpg');"></div>
+                   <div class="tile image" style="background-image: url('https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/IMG_37032.jpeg');"></div>
+                   <div class="tile image" style="background-image: url('https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/IMG_2786.jpg');"></div>
+               </section>
+           </main>
+       </div>
+   </div>
+
+   <div class="content-field" id="about-field">
+       <div class="content-inner">
+           <div class="field-title">about</div>
+           <div class="field-content">
+               <p>I build ambient compositions from single drones or fragments, layering sound intuitively with reel-to-reel tape, guitar pedals, Max/MSP, and Norns scripts. The process guides the piece—I follow where the sounds want to go. Self-taught and unbound by formal structure, I listen for relationships between textures, loops, and silence. What started as open exploration has focused into ambient work that values slowness and deep attention.</p>
+               <p><center><img src="https://raw.githubusercontent.com/wkarmis/images/refs/heads/main/22DSC00091.JPG" alt="hand" style="width:500px;height:400px;"></center></p>
+           </div>
+       </div>
+   </div>
+
+   <div class="content-field" id="discography-field">
+       <div class="content-inner">
+           <div class="field-title">discography</div>
+           <div class="field-content">
+               <div class="field-list">
+                   <div class="field-item">
+                       <div class="field-item-title">Fragments From A Gone World</div>
+                       <div class="field-item-desc">Description</div>
+                   </div>
+                   <div class="field-item">
+                       <div class="field-item-title">EP</div>
+                       <div class="field-item-desc">Description</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
+
+   <div class="content-field" id="events-field">
+       <div class="content-inner">
+           <div class="field-title">events</div>
+           <div class="field-content">
+               <p>no upcoming events</p>
+           </div>
+       </div>
+   </div>
+
+   <div class="content-field" id="contact-field">
+       <div class="content-inner">
+           <div class="field-title">contact</div>
+           <div class="field-content">
+               <p>willkarmis@protonmail.com</p>
+           </div>
+       </div>
+   </div>
+
+   <button class="return-core" id="returnCore" onclick="returnToCore()">← core</button>
+   
+   <div class="audio-info" id="audioInfo">
+       <div class="track-title" id="trackTitle"></div>
+       <div class="track-status" id="trackStatus">Click energy points to play compositions</div>
+   </div>
+
+   <div class="ambient-field" onclick="stopAllAudio()" id="ambientToggle">stop all</div>
+
+   <div id="slideshow" class="center">
+       <article></article>
+   </div>
+
+   <div id="image-viewer" class="center">
+       <article></article>
+   </div>
+
+   <script>
+       let audioContext;
+       let currentAudio = null;
+       let currentNode = null;
+       let audioNodes = {};
+       let isPlaying = false;
+       let currentField = null;
+
+       function openContentField(fieldName) {
+           if (currentField) {
+               document.getElementById(currentField + '-field').classList.remove('active');
+           }
+           
+           document.getElementById('core').style.opacity = '0.1';
+           document.getElementById('core').style.transform = 'scale(0.8)';
+           
+           setTimeout(() => {
+               const field = document.getElementById(fieldName + '-field');
+               if (field) {
+                   field.classList.add('active');
+                   currentField = fieldName;
+                   
+                   document.getElementById('returnCore').classList.add('visible');
+                   
+                   document.querySelectorAll('.nav-item').forEach(item => {
+                       item.classList.remove('active');
+                   });
+                   event.target.classList.add('active');
+                   
+                   activateAuraLayers();
+                   
+                   if (fieldName === 'process') {
+                       initializeTileProfile();
+                   }
+               }
+           }, 200);
+       }
+
+       function returnToCore() {
+           if (currentField) {
+               document.getElementById(currentField + '-field').classList.remove('active');
+           }
+           
+           document.getElementById('returnCore').classList.remove('visible');
+           
+           document.querySelectorAll('.nav-item').forEach(item => {
+               item.classList.remove('active');
+           });
+           
+           setTimeout(() => {
+               document.getElementById('core').style.opacity = '1';
+               document.getElementById('core').style.transform = 'scale(1)';
+               currentField = null;
+               
+               if (!currentAudio || currentAudio.paused) {
+                   deactivateAuraLayers();
+               }
+           }, 300);
+       }
+ 
+       const audioTracks = {
+           'track1': { src: 'https://audio.jukehost.co.uk/nwwzskTs8uLmCb6nGBcA9sxwjnjvZVZY', title: '', fallbackFreq: 82.4, fallbackType: 'triangle' },
+           'track2': { src: 'https://audio.jukehost.co.uk/ePHqSBbIRLpAulQm4yAKsKHa3AwXcNZ4', title: '', fallbackFreq: 110, fallbackType: 'sine' },
+           'track3': { src: 'path/to/your/ambient_vision.mp3', title: '', fallbackFreq: 73.4, fallbackType: 'sine' },
+           'track4': { src: 'path/to/your/ambient_connect.mp3', title: '', fallbackFreq: 65.4, fallbackType: 'sawtooth' },
+           'track5': { src: 'path/to/your/ambient_philosophy.mp3', title: '', fallbackFreq: 98, fallbackType: 'triangle' },
+           'track6': { src: 'path/to/your/ambient_repository.mp3', title: '', fallbackFreq: 146.8, fallbackType: 'sine' },
+           'track7': { src: 'path/to/your/ambient_inspiration.mp3', title: '', fallbackFreq: 87.3, fallbackType: 'triangle' },
+           'track8': { src: 'path/to/your/ambient_performance.mp3', title: '', fallbackFreq: 123.5, fallbackType: 'sawtooth' },
+           'track9': { src: 'path/to/your/ambient_experiments.mp3', title: '', fallbackFreq: 92.5, fallbackType: 'sine' }
+       };
+
+       function initAudio() {
+           if (!audioContext) {
+               audioContext = new (window.AudioContext || window.webkitAudioContext)();
+           }
+       }
+
+       function playAudioNode(trackId, nodeElement) {
+           initAudio();
+           
+           if (audioContext.state === 'suspended') {
+               audioContext.resume();
+           }
+
+           if (currentAudio && !currentAudio.paused) {
+               currentAudio.pause();
+               currentAudio.currentTime = 0;
+               if (currentNode) {
+                   currentNode.classList.remove('playing');
+               }
+           }
+
+           if (currentNode === nodeElement && currentAudio) {
+               currentNode = null;
+               currentAudio = null;
+               hideAudioInfo();
+               deactivateAuraLayers();
+               return;
+           }
+
+           const track = audioTracks[trackId];
+           if (!track) return;
+
+           nodeElement.classList.add('loading');
+           showAudioInfo(track.title, 'Loading...');
+
+           if (!audioNodes[trackId]) {
+               audioNodes[trackId] = new Audio();
+               audioNodes[trackId].crossOrigin = "anonymous";
+               audioNodes[trackId].preload = "auto";
+               
+               audioNodes[trackId].addEventListener('loadeddata', () => {
+                   nodeElement.classList.remove('loading');
+                   playTrack(trackId, nodeElement);
+               });
+               
+               audioNodes[trackId].addEventListener('error', () => {
+                   nodeElement.classList.remove('loading');
+                   playFallbackTone(track, nodeElement);
+               });
+               
+               audioNodes[trackId].addEventListener('ended', () => {
+                   nodeElement.classList.remove('playing');
+                   currentNode = null;
+                   currentAudio = null;
+                   hideAudioInfo();
+                   deactivateAuraLayers();
+               });
+
+               audioNodes[trackId].src = track.src;
+           } else {
+               nodeElement.classList.remove('loading');
+               playTrack(trackId, nodeElement);
+           }
+       }
+
+       function playTrack(trackId, nodeElement) {
+           const audio = audioNodes[trackId];
+           const track = audioTracks[trackId];
+           
+           try {
+               audio.currentTime = 0;
+               audio.play().then(() => {
+                   currentAudio = audio;
+                   currentNode = nodeElement;
+                   nodeElement.classList.add('playing');
+                   showAudioInfo(track.title, 'Now playing');
+                   activateAuraLayers();
+               }).catch(error => {
+                   playFallbackTone(track, nodeElement);
+               });
+           } catch (error) {
+               playFallbackTone(track, nodeElement);
+           }
+       }
+
+       function playFallbackTone(track, nodeElement) {
+           const oscillator = audioContext.createOscillator();
+           const gainNode = audioContext.createGain();
+           const filter = audioContext.createBiquadFilter();
+           
+           oscillator.frequency.setValueAtTime(track.fallbackFreq, audioContext.currentTime);
+           oscillator.type = track.fallbackType;
+           
+           filter.type = 'lowpass';
+           filter.frequency.setValueAtTime(500, audioContext.currentTime);
+           
+           gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+           gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.5);
+           
+           oscillator.connect(filter);
+           filter.connect(gainNode);
+           gainNode.connect(audioContext.destination);
+           
+           oscillator.start();
+           
+           currentAudio = { 
+               pause: () => oscillator.stop(),
+               paused: false,
+               currentTime: 0
+           };
+           currentNode = nodeElement;
+           nodeElement.classList.add('playing');
+           showAudioInfo(track.title, 'Synthesized preview');
+           activateAuraLayers();
+           
+           setTimeout(() => {
+               try {
+                   oscillator.stop();
+                   if (currentNode === nodeElement) {
+                       nodeElement.classList.remove('playing');
+                       currentNode = null;
+                       currentAudio = null;
+                       hideAudioInfo();
+                       deactivateAuraLayers();
+                   }
+               } catch (e) {}
+           }, 30000);
+       }
+
+       function stopAllAudio() {
+           if (currentAudio && !currentAudio.paused) {
+               currentAudio.pause();
+               currentAudio.currentTime = 0;
+           }
+           
+           if (currentNode) {
+               currentNode.classList.remove('playing');
+               currentNode = null;
+           }
+           
+           currentAudio = null;
+           hideAudioInfo();
+           deactivateAuraLayers();
+       }
+
+       function showAudioInfo(title, status) {
+           document.getElementById('trackTitle').textContent = title;
+           document.getElementById('trackStatus').textContent = status;
+           document.getElementById('audioInfo').classList.add('visible');
+       }
+
+       function hideAudioInfo() {
+           document.getElementById('audioInfo').classList.remove('visible');
+       }
+
+       function activateAuraLayers() {
+           document.querySelectorAll('.aura-layer').forEach(layer => {
+               layer.classList.add('active');
+           });
+       }
+
+       function deactivateAuraLayers() {
+           document.querySelectorAll('.aura-layer').forEach(layer => {
+               layer.classList.remove('active');
+           });
+       }
+
+       document.addEventListener('keydown', (e) => {
+           switch(e.key) {
+               case 'Escape':
+                   if (currentField) returnToCore();
+                   break;
+               case ' ':
+                   stopAllAudio();
+                   e.preventDefault();
+                   break;
+               case '1': case '2': case '3': case '4': case '5':
+               case '6': case '7': case '8': case '9':
+                   const trackNum = e.key;
+                   const nodeElement = document.querySelector(`.point-${trackNum}`);
+                   if (nodeElement) {
+                       playAudioNode(`track${trackNum}`, nodeElement);
+                   }
+                   break;
+           }
+       });
+
+       document.addEventListener('mousemove', (e) => {
+           const x = (e.clientX / window.innerWidth - 0.5) * 20;
+           const y = (e.clientY / window.innerHeight - 0.5) * 20;
+           
+           document.querySelectorAll('.aura-layer').forEach((layer, index) => {
+               const intensity = (index + 1) * 0.5;
+               layer.style.transform = `translate(calc(-50% + ${x * intensity}px), calc(-50% + ${y * intensity}px))`;
+           });
+       });
+
+       window.addEventListener('load', () => {
+           setTimeout(() => {
+               showAudioInfo('Will Karmis', 'Click energy points to play ambient compositions');
+               setTimeout(() => {
+                   hideAudioInfo();
+               }, 3000);
+           }, 1000);
+       });
+
+       function initializeTileProfile() {
+           setTimeout(() => {
+               const tiles = document.querySelectorAll('.tile');
+               const header = document.querySelector('.tile-header');
+               const slideshow = document.querySelector('#slideshow');
+               const slideshow_player = document.querySelector('#slideshow article');
+               const slideshow_button = document.querySelector('#slideshow-button');
+               const end_slideshow_button = document.querySelector('#end-slideshow-button');
+               let pos = 0;
+               let slideshow_play;
+
+               if (slideshow_button && !slideshow_button.dataset.initialized) {
+                   slideshow_button.dataset.initialized = 'true';
+
+                   slideshow_button.addEventListener('click', e => {
+                       e.preventDefault();
+                       e.target.innerText = 'Pause';
+                       end_slideshow_button.style.display = 'inline';
+
+                       if (e.target.dataset.playing == 'false') {
+                           nextSlide(true);
+                           slideshowPlay();
+                       } else {
+                           slideshowPause();
+                       }
+                   });
+
+                   end_slideshow_button.addEventListener('click', e => {
+                       e.preventDefault();
+                       clearInterval(slideshow_play);
+                       slideshow_button.innerText = 'Play';
+                       slideshow_button.dataset.playing = 'false';
+                       slideshow.style.display = 'none';
+                       header.classList.remove('dark');
+                       end_slideshow_button.style.display = 'none';
+                       slideshow_player.innerHTML = '';
+                       pos = 0;
+                   });
+
+                   function slideshowPlay() {
+                       slideshow_button.innerText = 'Pause';
+                       slideshow_button.dataset.playing = 'true';
+                       slideshow.style.display = 'flex';
+                       header.classList.add('dark');
+                       slideshow_play = setInterval(nextSlide, 2000);
+                   }
+
+                   function slideshowPause() {
+                       clearInterval(slideshow_play);
+                       slideshow_button.innerText = 'Play';
+                       slideshow_button.dataset.playing = 'false';
+                   }
+
+                   function prevSlide() {
+                       if (pos == 0) {
+                           pos = tiles.length - 1;
+                       } else {
+                           pos--;
+                       }
+                       slideshow_player.innerHTML = '';
+                       let tile_clone = tiles[pos].cloneNode(true);
+                       slideshow_player.appendChild(tile_clone);
+                       imageViewer();
+                   }
+
+                   function nextSlide(on_open) {
+                       if (on_open == true) {
+                           pos = 0;
+                       } else {
+                           if (pos == tiles.length - 1) {
+                               pos = 0;
+                           } else {
+                               pos++;
+                           }
+                       }
+                       slideshow_player.innerHTML = '';
+                       let tile_clone = tiles[pos].cloneNode(true);
+                       slideshow_player.appendChild(tile_clone);
+                       imageViewer();
+                   }
+
+                   document.addEventListener('keydown', (e) => {
+                       if (currentField === 'process') {
+                           if(e.keyCode == 32 && e.target == document.body) {
+                               e.preventDefault();
+                           }
+                       }
+                   });
+
+                   document.addEventListener('keyup', (e) => {
+                       if (currentField === 'process') {
+                           if(e.keyCode == 32){
+                               e.preventDefault();
+                               slideshow_button.click();
+                           }
+                           if(e.keyCode == 27){
+                               end_slideshow_button.click();
+                               closeViewer();
+                           }
+                           if(e.keyCode == 37){
+                               slideshowPause();
+                               prevSlide();
+                           }
+                           if(e.keyCode == 39){
+                               slideshowPause();
+                               nextSlide();
+                           }
+                       }
+                   });
+               }
+
+               function imageViewer() {
+                   const image_viewer = document.querySelector('#image-viewer');
+                   const images = document.querySelectorAll('.images img');
+
+                   for (let image of images) {
+                       image.addEventListener('click', e => {    
+                           image_viewer.style.backgroundImage = `url('${e.target.src}')`;
+                           image_viewer.style.display = 'flex';
+                       });
+                   }
+               }
+
+               function closeViewer(){ 
+                   const image_viewer = document.querySelector('#image-viewer');
+                   const image_viewer_inner = document.querySelector('#image-viewer article');
+                   if (image_viewer_inner) image_viewer_inner.innerHTML = '';
+                   image_viewer.style.display = 'none';
+               }
+
+               const image_viewer = document.querySelector('#image-viewer');
+               image_viewer.addEventListener('click', () => {
+                   closeViewer();
+               });
+
+               const lists = document.querySelectorAll('.randomize');
+               for (let list of lists) {
+                   let list_ul = list.querySelector('ul');
+                   let list_items = Array.from(list.querySelectorAll('li'));
+                   let shuffled_items = shuffle(list_items);
+                   list_ul.innerHTML = '';
+                   for (let item of shuffled_items) {
+                       let li = document.createElement('li');
+                       li.innerHTML = item.innerHTML;
+                       list_ul.appendChild(li);
+                   }
+               }
+
+               function shuffle(array) {
+                   var currentIndex = array.length, temporaryValue, randomIndex;
+                   while (0 !== currentIndex) {
+                       randomIndex = Math.floor(Math.random() * currentIndex);
+                       currentIndex -= 1;
+                       temporaryValue = array[currentIndex];
+                       array[currentIndex] = array[randomIndex];
+                       array[randomIndex] = temporaryValue;
+                   }
+                   return array;
+               }
+
+               imageViewer();
+           }, 100);
+       }
+   </script>
+</body>
+</html>
